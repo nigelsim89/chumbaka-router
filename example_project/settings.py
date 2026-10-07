@@ -111,23 +111,21 @@ PIPELINE = {
     "STYLESHEETS": {
         "css": {
             "source_filenames": (
-                os.path.join(BASE_DIR, "static/portal/sass/bootstrap.scss"),
-                os.path.join(BASE_DIR, "static/portal/sass/colorbox.scss"),
-                os.path.join(BASE_DIR, "static/portal/sass/styles.scss"),
+                "portal/sass/bootstrap.scss",
+                "portal/sass/colorbox.scss",
+                "portal/sass/styles.scss",
             ),
             "output_filename": "portal/css/portal.css",
         },
         "popup": {
             "source_filenames": (
-                os.path.join(
-                    BASE_DIR, "static/portal/sass/partials/_popup.scss"
-                ),
+                "portal/sass/partials/_popup.scss",
             ),
             "output_filename": "portal/css/popup.css",
         },
         "game-scss": {
             "source_filenames": (
-                os.path.join(BASE_DIR, "static/game/sass/game.scss"),
+                "game/sass/game.scss",
             ),
             "output_filename": "game/css/gamestyles.css",
         },
