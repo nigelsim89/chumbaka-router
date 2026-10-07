@@ -1,8 +1,9 @@
 """Django settings for example_project project."""
 
+import dj_database_url
 import os
 
-DEBUG = True
+DEBUG = os.getenv("RENDER") is None
 
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 
@@ -34,6 +35,13 @@ DATABASES = {
         "ATOMIC_REQUESTS": True,
     }
 }
+
+# Use Render PostgreSQL when DATABASE_URL is available
+if os.getenv("DATABASE_URL"):
+    DATABASES["default"] = dj_database_url.config(
+        default=os.getenv("DATABASE_URL"),
+        conn_max_age=600,
+    )
 
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 
@@ -84,6 +92,8 @@ INSTALLED_APPS = (
 )
 
 MIDDLEWARE = [
+    "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.locale.LocaleMiddleware",
     "django.middleware.common.CommonMiddleware",
