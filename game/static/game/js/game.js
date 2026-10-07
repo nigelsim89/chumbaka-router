@@ -96,13 +96,7 @@ ocargo.Game.prototype.setup = function () {
   )
 
   var loggedOutWarning = ''
-  // Check if logged on
-  if (USER_STATUS == 'UNTRACKED') {
-    loggedOutWarning =
-        '<br><span class="popup__text--warning">' +
-        gettext("You are not logged in. Your progress won't be saved.") +
-        '</span>'
-  }
+  
   // Start the popup
   var title = gettext('Try solving this one...')
   if (LEVEL_ID) {
@@ -271,49 +265,106 @@ ocargo.Game.prototype.sendAttempt = function (score) {
     return /^(GET|HEAD|OPTIONS|TRACE)$/.test(method)
   }
 
-  // TODO: Remove below - keeping it for now as a reminder that we need to
-  //  implement some kind of algorithm score for Python levels.
-  // // hack scores so that it works for demo and python TODO implement max scores and remove this!!
-  // if (PYTHON_ENABLED) {
-  //   score *= 2
-  // }
-
-  // Check that we should actually be sending an attempt - either if only blockly is enabled
-  // or if python is enabled and we're on the python tab (assumes they don't change tab quickly...)
+  // Check that we should actually be sending an attempt
   if (
     (BLOCKLY_ENABLED && !PYTHON_ENABLED) ||
     (PYTHON_ENABLED && this.isInPythonWorkspace())
   ) {
-    // Send out the submitted data.
     if (LEVEL_ID) {
+
+      // ---------------------------------------------------------
+      // CHUMBAKA LOCAL PROGRESS
+      // Save anonymous player's best score in this browser.
+      // ---------------------------------------------------------
+
+      if (USER_STATUS === 'UNTRACKED') {
+        try {
+          const levelId = parseInt(LEVEL_ID)
+          const storageKey = 'chumbakaRouterProgress'
+
+          let progress = JSON.parse(
+            localStorage.getItem(storageKey) || '{}'
+          )
+
+          const previousScore = progress[levelId]
+
+          // Only replace the stored score if this attempt is better.
+          if (
+            previousScore === undefined ||
+            score > previousScore
+          ) {
+            progress[levelId] = score
+
+            localStorage.setItem(
+              storageKey,
+              JSON.stringify(progress)
+            )
+          }
+
+          console.log(
+            'Chumbaka Router progress saved:',
+            levelId,
+            score
+          )
+        } catch (error) {
+          console.error(
+            'Could not save local progress:',
+            error
+          )
+        }
+      }
+
+      // ---------------------------------------------------------
+      // ORIGINAL RAPID ROUTER ATTEMPT SUBMISSION
+      // ---------------------------------------------------------
+
       var csrftoken = Cookies.get('csrftoken')
 
-      const attemptDuration = Math.floor((Date.now() - ATTEMPT_START_TIME) / 1000)
-      ATTEMPT_START_TIME = Date.now() // Set start time to now() again to reset counter for next attempt
+      const attemptDuration = Math.floor(
+        (Date.now() - ATTEMPT_START_TIME) / 1000
+      )
+
+      ATTEMPT_START_TIME = Date.now()
 
       $.ajax({
         url: Urls.submit_attempt(),
         type: 'POST',
         dataType: 'json',
+
         beforeSend: function (xhr, settings) {
-          if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
-            xhr.setRequestHeader('X-CSRFToken', csrftoken)
+          if (
+            !csrfSafeMethod(settings.type) &&
+            !this.crossDomain
+          ) {
+            xhr.setRequestHeader(
+              'X-CSRFToken',
+              csrftoken
+            )
           }
         }.bind(this),
+
         data: {
           level: parseInt(LEVEL_ID),
           score: score,
           time_spent: attemptDuration
         },
+
         error: function (xhr, errmsg, err) {
           console.error(
-            xhr.status + ': ' + errmsg + ' ' + err + ' ' + xhr.responseText
+            xhr.status +
+            ': ' +
+            errmsg +
+            ' ' +
+            err +
+            ' ' +
+            xhr.responseText
           )
         }.bind(this)
       })
     }
   }
 }
+
 
 ocargo.Game.prototype.registerFailure = function () {
   this.failures += 1

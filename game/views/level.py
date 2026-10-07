@@ -46,14 +46,11 @@ def play_custom_level(request, levelId, from_editor=False):
 
 def play_default_level(request, level_name):
     level_index = int(level_name)
+
+    # Rapid Router Blockly levels are 1-79.
+    # All levels are available to anonymous users.
     if level_index > 79:
         raise Http404
-    if (
-        level_index > 19
-        and not level_index in [29, 33, 44, 51, 61, 68]
-        and not request.user.is_authenticated
-    ):
-        return redirect(reverse("levels"))
 
     level = cached_default_level(level_name)
     return play_level(request, level)

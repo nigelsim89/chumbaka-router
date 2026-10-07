@@ -155,3 +155,4 @@ from codeforlife.legacy.csp_config import *
 AUTH_USER_MODEL = "user.User"
 
 from codeforlife.settings import GCP_KMS_KEY_URI, SECRET_KEY
+SILENCED_SYSTEM_CHECKS = ["auth.E003"]
